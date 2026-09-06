@@ -1,0 +1,48 @@
+name: CI
+
+# Agent fmt + clippy + test, and the scoped coverage gate. This file lives in the
+# monorepo under agent/.github/ and is MIRRORED to the public repo (goodpinger/
+# agent) where it runs on that repo's free Actions runners. GitHub only executes
+# workflows at a repo root, so it is inert in the monorepo and active only once
+# mirrored — where agent/ is the repo root.
+on:
+  push:
+  pull_request:
+
+jobs:
+  agent:
+    name: agent (fmt + clippy + test)
+    # Every shipped OS family, so the macOS and Windows builds are actually
+    # verified. musl release targets are the release workflow's job.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets -- -D warnings
+      # The RSS-ceiling assertion (20 MB) runs inside `cargo test` (Linux-only
+      # measurement).
+      - run: cargo test
+
+  coverage:
+    name: agent (coverage gate)
+    # cargo-llvm-cov + the /proc-based RSS helper are Linux-specific.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@cargo-llvm-cov
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: scripts/coverage-check.sh

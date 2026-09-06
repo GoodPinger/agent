@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="460" height="120" viewBox="0 0 460 120" role="img" aria-label="GoodPinger">
+  <rect x="0.5" y="0.5" width="459" height="119" rx="20" fill="#0b0b0d" stroke="#26262b"/>
+  <!-- pulse mark: the yellow brand glyph -->
+  <path d="M40 60 H70 L82 34 L98 90 L112 50 L120 60 H150"
+        fill="none" stroke="#facc15" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="172" y="58" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif"
+        font-size="34" font-weight="700" fill="#f5f5f4">GoodPinger</text>
+  <text x="173" y="86" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif"
+        font-size="15.5" fill="#a1a1aa">monitoring that states a cause</text>
+</svg>
