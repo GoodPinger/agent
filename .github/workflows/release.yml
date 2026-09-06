@@ -1,0 +1,102 @@
+name: release
+
+# Build, verify, checksum, and publish the agent binaries on a version tag.
+# Mirrored to the public repo (goodpinger/agent); it runs THERE and publishes the
+# GitHub Release in its own repo using the built-in GITHUB_TOKEN — no cross-repo
+# PAT. The agent is the irreversible half (a bad release lives on customers'
+# machines), so Linux MUST be static musl and we verify that here.
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write # create the GitHub Release in this repo
+
+jobs:
+  build:
+    name: build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+            zig: true
+          - target: aarch64-unknown-linux-musl
+            os: ubuntu-latest
+            zig: true
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: aarch64-apple-darwin
+            os: macos-latest
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      # cargo-zigbuild needs Zig on PATH for the musl cross-compile.
+      - name: Install Zig (musl cross-compile)
+        if: matrix.zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.13.0
+      - name: Install cargo-zigbuild (musl)
+        if: matrix.zig
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-zigbuild
+      - name: Build (musl via zig)
+        if: matrix.zig
+        run: cargo zigbuild --release --target ${{ matrix.target }}
+      - name: Build
+        if: ${{ !matrix.zig }}
+        run: cargo build --release --target ${{ matrix.target }}
+
+      # A dynamically-linked glibc binary that won't start on an old distro is
+      # worse than shipping nothing. Fail the release if Linux is not static.
+      - name: Verify Linux binary is static
+        if: matrix.zig
+        run: |
+          f="target/${{ matrix.target }}/release/gpr"
+          file "$f"
+          file "$f" | grep -q "statically linked" || { echo "NOT static!"; exit 1; }
+
+      - name: Stage artifact
+        shell: bash
+        run: |
+          ext=""
+          [ "${{ matrix.os }}" = "windows-latest" ] && ext=".exe"
+          src="target/${{ matrix.target }}/release/gpr$ext"
+          out="gpr-${{ matrix.target }}$ext"
+          cp "$src" "$out"
+          # Per-asset checksum, filename-matched for `sha256sum -c`.
+          if command -v sha256sum >/dev/null; then sha256sum "$out" > "$out.sha256";
+          else shasum -a 256 "$out" > "$out.sha256"; fi
+      - uses: actions/upload-artifact@v5
+        with:
+          name: ${{ matrix.target }}
+          path: |
+            gpr-${{ matrix.target }}*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          path: dist
+      - name: Flatten
+        run: find dist -type f -exec mv {} dist/ \; ; ls -la dist
+      # Publishes into THIS repo with the default GITHUB_TOKEN (contents:write
+      # above) — no external PAT needed.
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: dist/*
+          generate_release_notes: true
+          fail_on_unmatched_files: true
