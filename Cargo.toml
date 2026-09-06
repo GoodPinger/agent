@@ -1,0 +1,58 @@
+# gpr — the Goodpinger agent (MIT, open source). This crate is what gets
+# mirrored to the public repo (OSS.md §2). Keep it self-contained.
+[package]
+name = "gpr"
+version = "0.1.10"
+edition = "2021"
+rust-version = "1.75"
+license = "MIT"
+description = "Goodpinger agent — reports from inside your server so an alert becomes an answer."
+repository = "https://github.com/goodpinger/agent"
+
+# Single-crate workspace root so `cargo` commands are unambiguous and future
+# helper crates can be added as members without restructuring.
+[workspace]
+
+[[bin]]
+name = "gpr"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# rustls, not OpenSSL; blocking client keeps M1 runtime-free and small.
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+anyhow = "1"
+thiserror = "2"
+chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
+uuid = { version = "1", features = ["v4", "v7", "serde"] }
+directories = "5"
+# Redaction of secrets in captured output before it is buffered.
+regex = "1"
+# Host metrics + process sampling for `gpr watch`. Trim to the
+# system + disk collectors we actually use to keep the binary and RSS small.
+sysinfo = { version = "0.32", default-features = false, features = ["system", "disk"] }
+# Graceful shutdown on SIGTERM/Ctrl-C without hand-rolled `unsafe` signal code
+#. `termination` adds SIGTERM alongside SIGINT.
+ctrlc = { version = "3", features = ["termination"] }
+# Terminal raw mode + key events for the interactive `gpr watch edit` manager.
+# The vetted crate ratatui is built on; we use it directly (no full TUI stack).
+crossterm = "0.28"
+# SHA-256 verification of a downloaded release binary before `gpr update` swaps it
+# in — a bad self-update lands on customers' machines, so the checksum is checked.
+sha2 = "0.10"
+
+[dev-dependencies]
+assert_cmd = "2"
+predicates = "3"
+tempfile = "3"
+
+# Size matters — the agent's RSS ceiling is a marketing claim.
+# NOTE: no `panic = "abort"` — we catch panics at task boundaries,
+# which requires unwinding.
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+strip = true
