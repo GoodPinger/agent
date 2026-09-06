@@ -1,0 +1,9 @@
+2024-01-01 03:14:02 ERROR Unhandled exception while handling GET /api/orders
+2024-01-01 03:14:02 java.lang.NullPointerException: Cannot invoke "com.acme.Order.total()" because "order" is null
+	at com.acme.OrderService.process(OrderService.java:42)
+	at com.acme.ApiHandler.handle(ApiHandler.java:88)
+	at java.base/java.lang.Thread.run(Thread.java:829)
+Caused by: java.lang.IllegalStateException: order cache miss for id=88123
+	at com.acme.Cache.get(Cache.java:17)
+	... 3 more
+2024-01-01 03:14:03 INFO request completed with status 500

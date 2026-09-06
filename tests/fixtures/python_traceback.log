@@ -1,0 +1,8 @@
+2024-01-01 03:14:02 ERROR job failed while computing totals
+Traceback (most recent call last):
+  File "/app/worker.py", line 42, in run
+    total = compute(order)
+  File "/app/worker.py", line 88, in compute
+    return price / qty
+ValueError: division by zero
+2024-01-01 03:14:03 INFO worker restarted

@@ -1,0 +1,4 @@
+{"level":"info","time":"2024-01-01T03:14:01.000Z","msg":"server listening","port":3000}
+{"level":"error","time":"2024-01-01T03:14:02.500Z","msg":"unhandled rejection","err":"ECONNREFUSED 10.0.0.5:5432","reqId":"a1b2c3d4e5f6a7b8"}
+{"level":"warn","time":"2024-01-01T03:14:03.100Z","msg":"slow query","ms":812}
+{"level":"fatal","time":"2024-01-01T03:14:04.000Z","msg":"database pool exhausted"}
