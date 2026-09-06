@@ -1,0 +1,3 @@
+2024/01/01 03:14:02 [error] 1234#0: *56 connect() failed (111: Connection refused) while connecting to upstream, client: 10.0.0.5, server: api.example.com, request: "GET / HTTP/1.1", upstream: "http://127.0.0.1:8080/", host: "api.example.com"
+2024/01/01 03:14:05 [error] 1234#0: *57 connect() failed (111: Connection refused) while connecting to upstream, client: 10.0.0.6, server: api.example.com, request: "GET / HTTP/1.1", upstream: "http://127.0.0.1:8081/", host: "api.example.com"
+2024/01/01 03:14:10 [warn] 1234#0: *58 upstream server temporarily disabled while connecting to upstream, client: 10.0.0.7, server: api.example.com
